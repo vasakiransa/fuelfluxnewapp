@@ -6,48 +6,66 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Splash1 extends StatefulWidget {
   @override
   State<Splash1> createState() => _SplashState1();
 }
 
-// Define your new screen widget
-TextEditingController textFieldController = TextEditingController();
-
-String number = textFieldController.text;
-
 class _SplashState1 extends State<Splash1> {
+  final TextEditingController textFieldController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String _verificationId = '';
+
   @override
   void initState() {
     super.initState();
     Timer(Duration(seconds: 2), () {
-      // Navigator.pushReplacement(
-      // context,
-      // MaterialPageRoute(
-      // builder: (context) => Content(),
-      // ));
+      // Any logic you want to execute after a delay can go here
     });
   }
 
-  void _validateAndNavigate(BuildContext context) {
-    if (textFieldController.text.isEmpty) {
-      // Show an alert or a Snackbar if the TextField is empty
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please enter your mobile number'),
-        ),
-      );
+  void _validateAndNavigate(BuildContext context) async {
+    String phoneNumber = textFieldController.text.trim();
+
+    // Validate phone number (for example, check if it starts with a country code)
+    if (phoneNumber.isNotEmpty && phoneNumber.length >= 10) {
+      try {
+        // Initiate Firebase phone authentication
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber:
+              '+91' + phoneNumber, // Add your country code to the phone number
+          timeout: const Duration(seconds: 60),
+          verificationCompleted: (PhoneAuthCredential credential) {
+            // Handle the automatic verification (optional)
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            // Handle errors
+            print("Verification failed: ${e.message}");
+          },
+          codeSent: (String verificationId, int? resendToken) {
+            // Navigate to OtpScreen with verificationId and phoneNumber
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OtpScreen(
+                  verificationId: verificationId,
+                  phoneNumber: phoneNumber,
+                ),
+              ),
+            );
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {
+            // Handle timeout (optional)
+          },
+        );
+      } catch (e) {
+        print("Error during phone verification: $e");
+      }
     } else {
-      // Proceed to the next screen if the TextField is not empty
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtpScreen(
-            text: textFieldController.text,
-          ),
-        ),
-      );
+      // Handle invalid phone number input
+      print("Invalid phone number");
     }
   }
 
@@ -57,7 +75,7 @@ class _SplashState1 extends State<Splash1> {
       body: SingleChildScrollView(
         child: Container(
           decoration: BoxDecoration(
-            color: Color(0xFFFFFFFF),
+            color: Colors.white,
           ),
           child: Stack(children: [
             Padding(
@@ -189,7 +207,7 @@ class _SplashState1 extends State<Splash1> {
             Positioned(
               left: 0,
               right: 0,
-              top: 220,
+              top: 200,
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
@@ -205,8 +223,13 @@ class _SplashState1 extends State<Splash1> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 550),
+              padding: const EdgeInsets.only(top: 500),
               child: Container(
+                // height: 300,
+                // constraints: BoxConstraints(
+                // maxHeight: MediaQuery.of(context).size.height *
+                // 4.9, // Adjust as per your design
+                // ),
                 decoration: BoxDecoration(
                   color: Color(0xFFFFFFFF),
                   borderRadius: BorderRadius.only(
@@ -221,198 +244,215 @@ class _SplashState1 extends State<Splash1> {
                     ),
                   ],
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Container(
-                          padding: EdgeInsets.fromLTRB(26, 24.4, 26, 18),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    margin:
-                                        EdgeInsets.fromLTRB(0, 0, 21.8, 10.0),
-                                    child: Text(
-                                      'Enter your Mobile Number',
-                                      style: GoogleFonts.getFont(
-                                        'Poppins',
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 20,
-                                        height: 1.2,
-                                        letterSpacing: -0.4,
-                                        color: Color(0xFF000000),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(26, 24.4, 26, 18),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      margin:
+                                          EdgeInsets.fromLTRB(0, 0, 21.8, 10.0),
+                                      child: Text(
+                                        'Enter your Mobile Number',
+                                        style: GoogleFonts.getFont(
+                                          'Poppins',
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 20,
+                                          height: 1.2,
+                                          letterSpacing: -0.4,
+                                          color: Color(0xFF000000),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Container(
-                                    margin: EdgeInsets.fromLTRB(0, 0, 0, 32.1),
-                                    child: Text(
-                                      'We promise to never spam or share your personal information',
-                                      style: GoogleFonts.getFont(
-                                        'DM Sans',
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 16,
-                                        height: 1.2,
-                                        letterSpacing: 0.3,
-                                        color: Color(0xFF626262),
+                                    Container(
+                                      margin:
+                                          EdgeInsets.fromLTRB(0, 0, 0, 32.1),
+                                      child: Text(
+                                        'We promise to never spam or share your personal information',
+                                        style: GoogleFonts.getFont(
+                                          'DM Sans',
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 16,
+                                          height: 1.2,
+                                          letterSpacing: 0.3,
+                                          color: Color(0xFF626262),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Container(
-                                    margin: EdgeInsets.fromLTRB(8, 0, 8, 58.8),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        border:
-                                            Border.all(color: Colors.black)),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(10.0),
-                                      child: Align(
-                                        alignment: Alignment.topLeft,
-                                        child: SizedBox(
-                                          width: 228.8,
-                                          height: 50,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Container(
-                                                    margin: EdgeInsets.fromLTRB(
-                                                        10, 15, 9, 0),
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        image: DecorationImage(
-                                                          fit: BoxFit.cover,
-                                                          image: AssetImage(
-                                                            'assets/flag_1.png',
+                                    Container(
+                                      margin:
+                                          EdgeInsets.fromLTRB(8, 0, 8, 18.8),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border:
+                                              Border.all(color: Colors.black)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Align(
+                                          alignment: Alignment.topLeft,
+                                          child: SizedBox(
+                                            width: 228.8,
+                                            height: 50,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Container(
+                                                      margin:
+                                                          EdgeInsets.fromLTRB(
+                                                              10, 15, 9, 0),
+                                                      child: Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          image:
+                                                              DecorationImage(
+                                                            fit: BoxFit.cover,
+                                                            image: AssetImage(
+                                                              'assets/flag_1.png',
+                                                            ),
                                                           ),
                                                         ),
-                                                      ),
-                                                      child: Container(
-                                                        width: 26,
-                                                        height: 25.3,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Container(
-                                                    margin: EdgeInsets.fromLTRB(
-                                                        0, 18, 0, 2.4),
-                                                    child: Text(
-                                                      '+91',
-                                                      style:
-                                                          GoogleFonts.getFont(
-                                                        'DM Sans',
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        fontSize: 18,
-                                                        height: 1.1,
-                                                        letterSpacing: 0.4,
-                                                        color:
-                                                            Color(0xFF626262),
+                                                        child: Container(
+                                                          width: 26,
+                                                          height: 25.3,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Expanded(
-                                                child: SingleChildScrollView(
-                                                  child: Container(
-                                                    margin: EdgeInsets.fromLTRB(
-                                                        16, 3, 16, 58.8),
-                                                    child: TextField(
-                                                      controller:
-                                                          textFieldController,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        contentPadding:
-                                                            EdgeInsets.all(10),
-                                                        border:
-                                                            InputBorder.none,
-                                                        hintText: '1212312331',
-                                                        hintStyle: TextStyle(
-                                                            color: Color(
-                                                                0xFF626262)),
+                                                    Container(
+                                                      margin:
+                                                          EdgeInsets.fromLTRB(
+                                                              0, 18, 0, 2.4),
+                                                      child: Text(
+                                                        '+91',
+                                                        style:
+                                                            GoogleFonts.getFont(
+                                                          'DM Sans',
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          fontSize: 18,
+                                                          height: 1.1,
+                                                          letterSpacing: 0.4,
+                                                          color:
+                                                              Color(0xFF626262),
+                                                        ),
                                                       ),
-                                                      keyboardType:
-                                                          TextInputType.phone,
-                                                      style:
-                                                          GoogleFonts.getFont(
-                                                        'DM Sans',
-                                                        fontWeight:
-                                                            FontWeight.w400,
-                                                        fontSize: 18,
-                                                        height: 1.1,
-                                                        letterSpacing: 0.6,
-                                                        color:
-                                                            Color(0xFF626262),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Expanded(
+                                                  child: SingleChildScrollView(
+                                                    child: Container(
+                                                      margin:
+                                                          EdgeInsets.fromLTRB(
+                                                              16, 3, 16, 58.8),
+                                                      child: TextField(
+                                                        controller:
+                                                            textFieldController,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          contentPadding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          border:
+                                                              InputBorder.none,
+                                                          hintText:
+                                                              '1212312331',
+                                                          hintStyle: TextStyle(
+                                                              color: Color(
+                                                                  0xFF626262)),
+                                                        ),
+                                                        keyboardType:
+                                                            TextInputType.phone,
+                                                        style:
+                                                            GoogleFonts.getFont(
+                                                          'DM Sans',
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          fontSize: 18,
+                                                          height: 1.1,
+                                                          letterSpacing: 0.6,
+                                                          color:
+                                                              Color(0xFF626262),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                _validateAndNavigate(context);
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(top: 792, left: 50, right: 50),
-                child: Container(
-                  width: double.infinity,
-                  height: 59,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Color(0xFFE47B37),
-                      borderRadius: BorderRadius.circular(29.5),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          child: Text(
-                            'Send OTP',
-                            style: GoogleFonts.getFont(
-                              'Poppins',
-                              fontWeight: FontWeight.w500,
-                              fontSize: 20,
-                              height: 1.2,
-                              letterSpacing: -0.2,
-                              color: Color(0xFFFFFFFF),
+                                    GestureDetector(
+                                      onTap: () {
+                                        _validateAndNavigate(context);
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 50, right: 50),
+                                        child: Container(
+                                          width: double.infinity,
+                                          height: 59,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFFE47B37),
+                                              borderRadius:
+                                                  BorderRadius.circular(29.5),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  child: Text(
+                                                    'Send OTP',
+                                                    style: GoogleFonts.getFont(
+                                                      'Poppins',
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontSize: 20,
+                                                      height: 1.2,
+                                                      letterSpacing: -0.2,
+                                                      color: Color(0xFFFFFFFF),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
