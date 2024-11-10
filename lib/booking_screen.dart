@@ -13,6 +13,36 @@ import 'package:cng/page3.dart' as page3;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Inside your booking screen class, add this method to save booking data
+
+Future<void> saveBookingData({
+  required String userId,
+  required String pumpName,
+  required String location,
+  required String bookingTime,
+  required String status,
+}) async {
+  try {
+    await FirebaseFirestore.instance.collection('bookings').add({
+      'userId': userId,
+      'pumpName': pumpName,
+      'location': location,
+      'bookingTime': bookingTime,
+      'status': status,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    print('Error saving booking: $e');
+    rethrow;
+  }
+}
+
+// Call this method when user taps the book button
+// Example usage in your onTap:
 
 class booking_screen extends StatefulWidget {
   final String vehicle_num;
@@ -433,7 +463,7 @@ class _page11State extends State<page11> {
                                     });
                                   },
                                   child: Container(
-                                    width: 65,
+                                    width: 58,
                                     height: 96,
                                     decoration: BoxDecoration(
                                       color: colors[index],
@@ -599,7 +629,7 @@ class _page11State extends State<page11> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(left: 90),
+                              padding: const EdgeInsets.only(left: 80),
                               child: GestureDetector(
                                 onTap: () => _selectDate(
                                     context), // Trigger the calendar dialog
@@ -630,48 +660,73 @@ class _page11State extends State<page11> {
               padding: const EdgeInsets.only(
                   top: 800, bottom: 110, left: 30, right: 30),
               child: GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    barrierDismissible:
-                        false, // Prevents dialog from closing on outside touch
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        title: Row(
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFFE47B37)),
-                            ),
-                            SizedBox(width: 10),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 15),
-                              child: Text(
-                                "Booking in Progress",
-                                style: TextStyle(fontSize: 20),
+                onTap: () async {
+                  // Firebase booking logic added here
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          title: Row(
+                            children: [
+                              CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFE47B37)),
                               ),
+                              SizedBox(width: 10),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 15),
+                                child: Text(
+                                  "Booking in Progress",
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                              ),
+                            ],
+                          ),
+                          content: Text(
+                            "Please wait while we process your booking.",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        );
+                      },
+                    );
+
+                    await saveBookingData(
+                        userId: user.uid,
+                        pumpName: 'Indian Oil Petroleum',
+                        location: '58-12 Queens Blvd, Suite2 Queens, NY 11377',
+                        bookingTime: DateTime.now().toString(),
+                        status: 'pending');
+
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => page11()),
+                    );
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text("Not Authenticated"),
+                          content: Text("Please log in to continue."),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text("OK"),
                             ),
                           ],
-                        ),
-                        content: Text(
-                          "Please wait while we process your booking.",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(); // Close the dialog
-                              // Navigate to the next screen or perform other actions
-                            },
-                            child: Text("OK"),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                        );
+                      },
+                    );
+                  }
                 },
                 child: Container(
                   width: double.infinity,
