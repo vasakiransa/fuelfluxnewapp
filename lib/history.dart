@@ -48,9 +48,9 @@ class _SplashState extends State<history_screen> {
       const page2.Page2(),
       const history(),
       page4.Page4(
-        name1: name,
-        email1: email,
-        phone1: number,
+        name1: '',
+        email1: '',
+        phone1: '',
       ),
     ];
     return Scaffold(
@@ -272,7 +272,10 @@ class historystate extends State<history> {
                                     borderRadius: BorderRadius.circular(20.9),
                                   ),
                                   child: Container(
-                                    width: 163,
+                                    width:
+                                        MediaQuery.of(context).size.width < 330
+                                            ? 153
+                                            : 163,
                                     height: 82,
                                   ),
                                 ),
@@ -350,7 +353,10 @@ class historystate extends State<history> {
                                     borderRadius: BorderRadius.circular(20.9),
                                   ),
                                   child: Container(
-                                    width: 163,
+                                    width:
+                                        MediaQuery.of(context).size.width < 330
+                                            ? 138
+                                            : 163,
                                     height: 82,
                                   ),
                                 ),
